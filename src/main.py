@@ -75,6 +75,7 @@ def index_collection_names(names: list[str]):
     if mongo.is_connected():
         mongo.insert("general", {"collection_names": names})
         mongo.close()
+        print(f"Inserted {len(names)} collection names in general")
 
 
 def main(paths: list[str], names: list[str]):
@@ -89,6 +90,7 @@ def main(paths: list[str], names: list[str]):
         if mongo.is_connected():
             mongo.insert_many(names[index], list_of_schemas)
             mongo.close()
+            print(f"Inserted {len(list_of_schemas)} documents in {names[index]}")
         index += 1
 
     index_collection_names(names)
