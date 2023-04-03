@@ -3,13 +3,14 @@ import pandas as pd
 from pymongo import MongoClient
 
 DB_NAME = ""
+URI = "mongodb://localhost:27017"
+DIR_PATH = r""
+
 
 class MongoDb:
-    URI = "mongodb://localhost:27017"
-
     def __init__(self):
         try:
-            self.client = MongoClient(MongoDb.URI)
+            self.client = MongoClient(URI)
             self.database = self.client[DB_NAME]
             self.__isInitialized = True
         except Exception as e:
@@ -49,45 +50,50 @@ class MongoDb:
             print(e)
             return False
 
-def get_paths_and_name(dir:str) -> tuple[list[str], list[str]]:
+
+def get_paths_and_name(dir: str) -> tuple[list[str], list[str]]:
     paths = []
     names = []
     for path in os.listdir(dir):
-        if path.endswith('.xlsx'):
+        if path.endswith(".xlsx"):
             paths.append(os.path.join(dir, path))
             # Append the name of the file without the extension
-            name = path.split('\\')
-            names.append(name[len(name) - 1].split('.')[0])
+            name = path.split("\\")
+            names.append(name[len(name) - 1].split(".")[0])
     return paths, names
+
 
 def get_schema(df: pd.DataFrame) -> dict[str, any]:
     schema = {}
     for col in df.columns:
-        schema[col] = None 
+        schema[col] = None
     return schema
+
 
 def index_collection_names(names: list[str]):
     mongo = MongoDb()
     if mongo.is_connected():
-        mongo.insert('general', {'collection_names': names})
+        mongo.insert("general", {"collection_names": names})
         mongo.close()
+
 
 def main(paths: list[str], names: list[str]):
     index = 0
     for path in paths:
         df = pd.read_excel(path)
-        list_of_schemas:list[dict[str, any]] = []
+        list_of_schemas: list[dict[str, any]] = []
         for _, row in df.iterrows():
             list_of_schemas.append(row.to_dict())
 
         mongo = MongoDb()
         if mongo.is_connected():
             mongo.insert_many(names[index], list_of_schemas)
-            mongo.close() 
+            mongo.close()
         index += 1
-    
+
     index_collection_names(names)
 
-if __name__ == '__main__':
-    paths,names = get_paths_and_name(r'C:\Users\Sergi\Downloads\CRM')
+
+if __name__ == "__main__":
+    paths, names = get_paths_and_name(DIR_PATH)
     main(paths, names)
